@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { AddExpenseModal } from "../components/modals/AddExpenseModal"
 import { AddParticipantModal } from "../components/modals/AddParticipantModal"
 import { CreateEventModal } from "../components/modals/CreateEventModal"
+import { ExpenseDetailsModal } from "../components/modals/ExpenseDetailsModal"
 import { PaymentModal } from "../components/modals/PaymentModal"
 import { UploadReceiptModal } from "../components/modals/UploadReceiptModal"
 import { ViewReceiptsModal } from "../components/modals/ViewReceiptsModal"
@@ -12,10 +13,7 @@ import {
 	saveExpense,
 	saveReceipt,
 	saveParticipant,
-	getGroups,
-	getExpenses,
 	getReceipts,
-	getParticipants,
 } from "../utils/localStorage"
 import styles from "./Dashboard.module.css"
 
@@ -26,16 +24,12 @@ interface Group {
 	participantCount: number
 }
 
-interface Balance {
-	amount: number
-	type: "owe" | "owed"
-}
-
 interface Settlement {
 	from: string
 	to: string
 	amount: number
 	type: "pay" | "receive"
+	toAddress?: string
 }
 
 interface Expense {
@@ -43,7 +37,15 @@ interface Expense {
 	description: string
 	amount: number
 	paidBy: string
+	splitBetween: string[]
 	date: string
+	note?: string
+	receiptFileName?: string
+}
+
+interface Participant {
+	name: string
+	stellarAddress?: string
 }
 
 interface Receipt {
@@ -61,15 +63,18 @@ const Dashboard: React.FC = () => {
 		participantCount: 4,
 	})
 
-	const [balance] = useState<Balance>({
-		amount: 320.0,
-		type: "owed",
-	})
-
 	const [paymentTab, setPaymentTab] = useState<"pay" | "receive">("pay")
 
-	const [settlementsToPayData] = useState<Settlement[]>([
-		{ from: "You", to: "Alice", amount: 50.0, type: "pay" },
+	const [settlementsToPayData, setSettlementsToPayData] = useState<
+		Settlement[]
+	>([
+		{
+			from: "You",
+			to: "Alice",
+			amount: 50.0,
+			type: "pay",
+			toAddress: "GDZX...3K7M",
+		},
 	])
 
 	const [settlementsToReceiveData, setSettlementsToReceiveData] = useState<
@@ -85,6 +90,7 @@ const Dashboard: React.FC = () => {
 			description: "Hotel booking",
 			amount: 450.0,
 			paidBy: "You",
+			splitBetween: ["You", "Alice", "Bob", "Charlie"],
 			date: "2 days ago",
 		},
 		{
@@ -92,6 +98,7 @@ const Dashboard: React.FC = () => {
 			description: "Restaurant dinner",
 			amount: 180.5,
 			paidBy: "Alice",
+			splitBetween: ["You", "Alice", "Bob", "Charlie"],
 			date: "3 days ago",
 		},
 		{
@@ -99,15 +106,17 @@ const Dashboard: React.FC = () => {
 			description: "Car rental",
 			amount: 320.0,
 			paidBy: "Bob",
+			splitBetween: ["You", "Alice", "Bob", "Charlie"],
 			date: "5 days ago",
 		},
 	])
 
-	const [participants, setParticipants] = useState<string[]>([
-		"Alice",
-		"Bob",
-		"Charlie",
+	const [participants, setParticipants] = useState<Participant[]>([
+		{ name: "Alice", stellarAddress: "GDZX...3K7M" },
+		{ name: "Bob" },
+		{ name: "Charlie" },
 	])
+
 	const [receipts, setReceipts] = useState<Receipt[]>([])
 
 	// Modal states
@@ -119,14 +128,16 @@ const Dashboard: React.FC = () => {
 	const [paymentModal, setPaymentModal] = useState<{
 		isOpen: boolean
 		settlement?: Settlement
-	}>({
-		isOpen: false,
-	})
+	}>({ isOpen: false })
+	const [expenseDetail, setExpenseDetail] = useState<{
+		isOpen: boolean
+		expense?: Expense
+	}>({ isOpen: false })
 
 	useEffect(() => {
-		const storedReceipts = getReceipts()
+		const stored = getReceipts()
 		setReceipts(
-			storedReceipts.map((r) => ({
+			stored.map((r) => ({
 				id: r.id,
 				fileName: r.fileName,
 				uploadedAt: r.uploadedAt,
@@ -134,6 +145,18 @@ const Dashboard: React.FC = () => {
 			})),
 		)
 	}, [])
+
+	// Derived: settlement progress
+	const totalSettlements =
+		settlementsToPayData.length + settlementsToReceiveData.length
+	const completedSettlements = 1 // mock: 1 already done
+	const progressPct =
+		totalSettlements > 0
+			? Math.round(
+					(completedSettlements / (totalSettlements + completedSettlements)) *
+						100,
+				)
+			: 100
 
 	const handleCreateEvent = (
 		name: string,
@@ -148,9 +171,7 @@ const Dashboard: React.FC = () => {
 			createdAt: new Date().toISOString(),
 			participantIds: [],
 		}
-
 		saveGroup(newGroup)
-
 		setSelectedGroup({
 			id: newGroup.id,
 			name: newGroup.name,
@@ -168,17 +189,15 @@ const Dashboard: React.FC = () => {
 			uploadedAt: new Date().toISOString(),
 			previewUrl,
 		}
-
 		saveReceipt(receipt)
-
-		setReceipts([
+		setReceipts((prev) => [
 			{
 				id: receipt.id,
 				fileName: receipt.fileName,
 				uploadedAt: receipt.uploadedAt,
 				fileSize: receipt.fileSize,
 			},
-			...receipts,
+			...prev,
 		])
 	}
 
@@ -187,75 +206,79 @@ const Dashboard: React.FC = () => {
 		amount: number,
 		paidBy: string,
 	) => {
+		const splitBetween = ["You", ...participants.map((p) => p.name)]
 		const newExpense = {
 			id: Date.now().toString(),
 			groupId: selectedGroup.id,
 			description,
 			amount,
 			paidBy,
-			splitBetween: ["You", ...participants],
+			splitBetween,
 			date: new Date().toISOString(),
 			settled: false,
 		}
-
 		saveExpense(newExpense)
-
-		const expenseForDisplay: Expense = {
-			id: newExpense.id,
-			description: newExpense.description,
-			amount: newExpense.amount,
-			paidBy: newExpense.paidBy,
-			date: "Just now",
-		}
-
-		setRecentExpenses([expenseForDisplay, ...recentExpenses])
-
-		setSelectedGroup({
-			...selectedGroup,
-			totalExpenses: selectedGroup.totalExpenses + amount,
-		})
+		setRecentExpenses((prev) => [
+			{
+				id: newExpense.id,
+				description,
+				amount,
+				paidBy,
+				splitBetween,
+				date: "Just now",
+			},
+			...prev,
+		])
+		setSelectedGroup((prev) => ({
+			...prev,
+			totalExpenses: prev.totalExpenses + amount,
+		}))
 	}
 
 	const handleAddParticipant = (name: string, stellarAddress?: string) => {
-		const newParticipant = {
-			id: Date.now().toString(),
-			name,
-			stellarAddress,
-		}
-
-		saveParticipant(newParticipant)
-		setParticipants([...participants, name])
-
-		setSelectedGroup({
-			...selectedGroup,
-			participantCount: selectedGroup.participantCount + 1,
-		})
+		saveParticipant({ id: Date.now().toString(), name, stellarAddress })
+		setParticipants((prev) => [...prev, { name, stellarAddress }])
+		setSelectedGroup((prev) => ({
+			...prev,
+			participantCount: prev.participantCount + 1,
+		}))
 	}
 
 	const handlePayment = (settlement: Settlement) => {
 		setPaymentModal({ isOpen: true, settlement })
 	}
 
+	const handleMarkAsPaid = (settlement: Settlement) => {
+		if (settlement.type === "pay") {
+			setSettlementsToPayData((prev) => prev.filter((s) => s !== settlement))
+		} else {
+			setSettlementsToReceiveData((prev) =>
+				prev.map((s) => (s === settlement ? { ...s, settled: true } : s)),
+			)
+		}
+	}
+
 	const handleConfirmPayment = () => {
 		if (paymentModal.settlement) {
-			setSettlementsToReceiveData(
-				settlementsToReceiveData.filter((s) => s !== paymentModal.settlement),
+			setSettlementsToPayData((prev) =>
+				prev.filter((s) => s !== paymentModal.settlement),
 			)
 		}
 		setPaymentModal({ isOpen: false })
 	}
 
-	const handleLinkToExpense = (receiptId: string) => {
+	const handleDeleteExpense = (id: string) => {
+		setRecentExpenses((prev) => prev.filter((e) => e.id !== id))
+	}
+
+	const handleLinkToExpense = (_receiptId: string) => {
 		setIsViewReceiptsOpen(false)
 		setIsAddExpenseOpen(true)
 	}
 
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString)
-		const now = new Date()
-		const diffMs = now.getTime() - date.getTime()
-		const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
+		const diffDays = Math.floor((Date.now() - date.getTime()) / 86400000)
 		if (diffDays === 0) return "Today"
 		if (diffDays === 1) return "Yesterday"
 		if (diffDays < 7) return `${diffDays} days ago`
@@ -264,6 +287,7 @@ const Dashboard: React.FC = () => {
 
 	const currentSettlements =
 		paymentTab === "pay" ? settlementsToPayData : settlementsToReceiveData
+	const participantNames = participants.map((p) => p.name)
 
 	return (
 		<div className={styles.dashboard}>
@@ -296,6 +320,23 @@ const Dashboard: React.FC = () => {
 									</span>
 								</div>
 							</div>
+
+							{/* Progress bar — item 7 */}
+							<div className={styles.progressSection}>
+								<div className={styles.progressLabel}>
+									<span>
+										{completedSettlements} of{" "}
+										{completedSettlements + totalSettlements} payments completed
+									</span>
+									<span>{progressPct}%</span>
+								</div>
+								<div className={styles.progressTrack}>
+									<div
+										className={styles.progressFill}
+										style={{ width: `${progressPct}%` }}
+									/>
+								</div>
+							</div>
 						</CardContent>
 					</Card>
 				</div>
@@ -305,16 +346,10 @@ const Dashboard: React.FC = () => {
 					<Card variant="accent" size="large">
 						<CardContent>
 							<div className={styles.balanceContent}>
-								<span className={styles.balanceLabel}>
-									{balance.type === "owed" ? "You are owed" : "You owe"}
-								</span>
-								<span className={styles.balanceAmount}>
-									{balance.amount.toFixed(2)} XLM
-								</span>
+								<span className={styles.balanceLabel}>You are owed</span>
+								<span className={styles.balanceAmount}>320.00 XLM</span>
 								<span className={styles.balanceNote}>
-									{balance.type === "owed"
-										? "Waiting for settlements"
-										: "Ready to settle"}
+									Waiting for settlements
 								</span>
 							</div>
 						</CardContent>
@@ -359,13 +394,32 @@ const Dashboard: React.FC = () => {
 													{settlement.amount.toFixed(2)} XLM
 												</span>
 												{paymentTab === "pay" ? (
-													<Button
-														size="small"
-														variant="primary"
-														onClick={() => handlePayment(settlement)}
-													>
-														Pay
-													</Button>
+													<div className={styles.settlementButtons}>
+														{settlement.toAddress ? (
+															<Button
+																size="small"
+																variant="primary"
+																onClick={() => handlePayment(settlement)}
+															>
+																Pay
+															</Button>
+														) : (
+															<Button
+																size="small"
+																variant="secondary"
+																onClick={() => setIsAddParticipantOpen(true)}
+															>
+																Add wallet
+															</Button>
+														)}
+														<Button
+															size="small"
+															variant="ghost"
+															onClick={() => handleMarkAsPaid(settlement)}
+														>
+															Mark paid
+														</Button>
+													</div>
 												) : (
 													<span className={styles.statusBadge}>Waiting</span>
 												)}
@@ -375,7 +429,14 @@ const Dashboard: React.FC = () => {
 								</div>
 							) : (
 								<div className={styles.emptyState}>
-									<p>All settled up</p>
+									<p>No pending payments</p>
+									<Button
+										size="small"
+										variant="secondary"
+										onClick={() => setIsAddExpenseOpen(true)}
+									>
+										Add expense
+									</Button>
 								</div>
 							)}
 						</CardContent>
@@ -390,17 +451,21 @@ const Dashboard: React.FC = () => {
 							action={
 								<Button
 									size="small"
-									variant="ghost"
+									variant="primary"
 									onClick={() => setIsAddExpenseOpen(true)}
 								>
-									View All
+									+ Add
 								</Button>
 							}
 						/>
 						<CardContent>
 							<div className={styles.expenseList}>
 								{recentExpenses.slice(0, 5).map((expense) => (
-									<div key={expense.id} className={styles.expenseItem}>
+									<div
+										key={expense.id}
+										className={styles.expenseItem}
+										onClick={() => setExpenseDetail({ isOpen: true, expense })}
+									>
 										<div className={styles.expenseInfo}>
 											<span className={styles.expenseDescription}>
 												{expense.description}
@@ -429,7 +494,25 @@ const Dashboard: React.FC = () => {
 									className={styles.actionCard}
 									onClick={() => setIsCreateEventOpen(true)}
 								>
-									<div className={styles.actionIcon}>+</div>
+									<div className={styles.actionIcon}>
+										<svg
+											width="22"
+											height="22"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										>
+											<rect x="3" y="4" width="18" height="18" rx="2" />
+											<line x1="16" y1="2" x2="16" y2="6" />
+											<line x1="8" y1="2" x2="8" y2="6" />
+											<line x1="3" y1="10" x2="21" y2="10" />
+											<line x1="12" y1="14" x2="12" y2="18" />
+											<line x1="10" y1="16" x2="14" y2="16" />
+										</svg>
+									</div>
 									<span className={styles.actionLabel}>Create Event</span>
 								</button>
 
@@ -437,7 +520,21 @@ const Dashboard: React.FC = () => {
 									className={styles.actionCard}
 									onClick={() => setIsAddExpenseOpen(true)}
 								>
-									<div className={styles.actionIcon}>$</div>
+									<div className={styles.actionIcon}>
+										<svg
+											width="22"
+											height="22"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										>
+											<line x1="12" y1="1" x2="12" y2="23" />
+											<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+										</svg>
+									</div>
 									<span className={styles.actionLabel}>Add Expense</span>
 								</button>
 
@@ -445,7 +542,22 @@ const Dashboard: React.FC = () => {
 									className={styles.actionCard}
 									onClick={() => setIsUploadReceiptOpen(true)}
 								>
-									<div className={styles.actionIcon}>↑</div>
+									<div className={styles.actionIcon}>
+										<svg
+											width="22"
+											height="22"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										>
+											<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+											<polyline points="17 8 12 3 7 8" />
+											<line x1="12" y1="3" x2="12" y2="15" />
+										</svg>
+									</div>
 									<span className={styles.actionLabel}>Upload Receipt</span>
 								</button>
 
@@ -453,9 +565,74 @@ const Dashboard: React.FC = () => {
 									className={styles.actionCard}
 									onClick={() => setIsAddParticipantOpen(true)}
 								>
-									<div className={styles.actionIcon}>👤</div>
+									<div className={styles.actionIcon}>
+										<svg
+											width="22"
+											height="22"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										>
+											<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+											<circle cx="12" cy="7" r="4" />
+											<line x1="19" y1="8" x2="19" y2="14" />
+											<line x1="22" y1="11" x2="16" y2="11" />
+										</svg>
+									</div>
 									<span className={styles.actionLabel}>Add Participant</span>
 								</button>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* Participants */}
+				<div className={styles.participantsCard}>
+					<Card size="medium">
+						<CardHeader
+							title="Participants"
+							action={
+								<Button
+									size="small"
+									variant="ghost"
+									onClick={() => setIsAddParticipantOpen(true)}
+								>
+									+ Add
+								</Button>
+							}
+						/>
+						<CardContent>
+							<div className={styles.participantList}>
+								{participants.slice(0, 5).map((p, i) => (
+									<div key={i} className={styles.participantItem}>
+										<div className={styles.participantAvatar}>
+											{p.name.charAt(0).toUpperCase()}
+										</div>
+										<div className={styles.participantInfo}>
+											<span className={styles.participantName}>{p.name}</span>
+											{p.stellarAddress ? (
+												<span className={styles.participantAddress}>
+													{p.stellarAddress}
+												</span>
+											) : (
+												<button
+													className={styles.addWalletLink}
+													onClick={() => setIsAddParticipantOpen(true)}
+												>
+													Add wallet
+												</button>
+											)}
+										</div>
+										<span
+											className={`${styles.walletBadge} ${p.stellarAddress ? styles.walletLinked : styles.walletMissing}`}
+										>
+											{p.stellarAddress ? "Linked" : "Missing"}
+										</span>
+									</div>
+								))}
 							</div>
 						</CardContent>
 					</Card>
@@ -467,13 +644,22 @@ const Dashboard: React.FC = () => {
 						<CardHeader
 							title="Receipts"
 							action={
-								<Button
-									size="small"
-									variant="ghost"
-									onClick={() => setIsViewReceiptsOpen(true)}
-								>
-									View All
-								</Button>
+								<div className={styles.receiptHeaderActions}>
+									<Button
+										size="small"
+										variant="ghost"
+										onClick={() => setIsViewReceiptsOpen(true)}
+									>
+										View all
+									</Button>
+									<Button
+										size="small"
+										variant="secondary"
+										onClick={() => setIsUploadReceiptOpen(true)}
+									>
+										Upload
+									</Button>
+								</div>
 							}
 						/>
 						<CardContent>
@@ -515,26 +701,22 @@ const Dashboard: React.FC = () => {
 				onClose={() => setIsCreateEventOpen(false)}
 				onCreateEvent={handleCreateEvent}
 			/>
-
 			<UploadReceiptModal
 				isOpen={isUploadReceiptOpen}
 				onClose={() => setIsUploadReceiptOpen(false)}
 				onUploadReceipt={handleUploadReceipt}
 			/>
-
 			<AddExpenseModal
 				isOpen={isAddExpenseOpen}
 				onClose={() => setIsAddExpenseOpen(false)}
 				onAddExpense={handleAddExpense}
-				participants={participants}
+				participants={participantNames}
 			/>
-
 			<AddParticipantModal
 				isOpen={isAddParticipantOpen}
 				onClose={() => setIsAddParticipantOpen(false)}
 				onAddParticipant={handleAddParticipant}
 			/>
-
 			<ViewReceiptsModal
 				isOpen={isViewReceiptsOpen}
 				onClose={() => setIsViewReceiptsOpen(false)}
@@ -547,7 +729,6 @@ const Dashboard: React.FC = () => {
 				}))}
 				onLinkToExpense={handleLinkToExpense}
 			/>
-
 			<PaymentModal
 				isOpen={paymentModal.isOpen}
 				onClose={() => setPaymentModal({ isOpen: false })}
@@ -555,7 +736,13 @@ const Dashboard: React.FC = () => {
 				from={paymentModal.settlement?.from || ""}
 				to={paymentModal.settlement?.to || ""}
 				amount={paymentModal.settlement?.amount || 0}
-				toAddress="GDZX...3K7M"
+				toAddress={paymentModal.settlement?.toAddress}
+			/>
+			<ExpenseDetailsModal
+				isOpen={expenseDetail.isOpen}
+				onClose={() => setExpenseDetail({ isOpen: false })}
+				expense={expenseDetail.expense || null}
+				onDelete={handleDeleteExpense}
 			/>
 		</div>
 	)

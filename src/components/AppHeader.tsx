@@ -2,21 +2,10 @@ import React from "react"
 import { NavLink } from "react-router-dom"
 import { useWallet } from "../hooks/useWallet"
 import styles from "./AppHeader.module.css"
+import { WalletDropdown } from "./WalletDropdown"
 
 const AppHeader: React.FC = () => {
 	const { address, connect, disconnect } = useWallet()
-
-	const handleWalletClick = () => {
-		if (address) {
-			disconnect()
-		} else {
-			connect()
-		}
-	}
-
-	const formatAddress = (addr: string) => {
-		return `${addr.slice(0, 4)}...${addr.slice(-4)}`
-	}
 
 	return (
 		<header className={styles.header}>
@@ -45,12 +34,13 @@ const AppHeader: React.FC = () => {
 				</nav>
 
 				<div className={styles.actions}>
-					<button
-						className={address ? styles.walletConnected : styles.walletButton}
-						onClick={handleWalletClick}
-					>
-						{address ? formatAddress(address) : "Connect Wallet"}
-					</button>
+					{address ? (
+						<WalletDropdown address={address} onDisconnect={disconnect} />
+					) : (
+						<button className={styles.walletButton} onClick={connect}>
+							Connect Wallet
+						</button>
+					)}
 				</div>
 			</div>
 		</header>
