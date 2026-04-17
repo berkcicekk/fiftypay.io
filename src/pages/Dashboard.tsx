@@ -352,13 +352,107 @@ const Dashboard: React.FC = () => {
 									Waiting for settlements
 								</span>
 							</div>
+
+							{/* Mini Quick Actions */}
+							<div className={styles.miniActions}>
+								<button
+									className={styles.miniActionBtn}
+									onClick={() => setIsCreateEventOpen(true)}
+									title="Create Event"
+								>
+									<svg
+										width="18"
+										height="18"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<rect x="3" y="4" width="18" height="18" rx="2" />
+										<line x1="16" y1="2" x2="16" y2="6" />
+										<line x1="8" y1="2" x2="8" y2="6" />
+										<line x1="3" y1="10" x2="21" y2="10" />
+										<line x1="12" y1="14" x2="12" y2="18" />
+										<line x1="10" y1="16" x2="14" y2="16" />
+									</svg>
+									<span>Create event</span>
+								</button>
+
+								<button
+									className={styles.miniActionBtn}
+									onClick={() => setIsAddExpenseOpen(true)}
+									title="Add Expense"
+								>
+									<svg
+										width="18"
+										height="18"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<line x1="12" y1="1" x2="12" y2="23" />
+										<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+									</svg>
+									<span>Add expense</span>
+								</button>
+
+								<button
+									className={styles.miniActionBtn}
+									onClick={() => setIsUploadReceiptOpen(true)}
+									title="Upload Receipt"
+								>
+									<svg
+										width="18"
+										height="18"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+										<polyline points="17 8 12 3 7 8" />
+										<line x1="12" y1="3" x2="12" y2="15" />
+									</svg>
+									<span>Upload receipt</span>
+								</button>
+
+								<button
+									className={styles.miniActionBtn}
+									onClick={() => setIsAddParticipantOpen(true)}
+									title="Add Participant"
+								>
+									<svg
+										width="18"
+										height="18"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+										<circle cx="12" cy="7" r="4" />
+										<line x1="19" y1="8" x2="19" y2="14" />
+										<line x1="22" y1="11" x2="16" y2="11" />
+									</svg>
+									<span>Add participant</span>
+								</button>
+							</div>
 						</CardContent>
 					</Card>
 				</div>
 
 				{/* Pending Payments */}
 				<div className={styles.settlements}>
-					<Card size="large">
+					<Card size="medium">
 						<CardHeader title="Pending Payments" />
 						<CardContent>
 							<div className={styles.paymentTabs}>
@@ -378,7 +472,7 @@ const Dashboard: React.FC = () => {
 
 							{currentSettlements.length > 0 ? (
 								<div className={styles.settlementList}>
-									{currentSettlements.map((settlement, index) => (
+									{currentSettlements.slice(0, 2).map((settlement, index) => (
 										<div key={index} className={styles.settlementItem}>
 											<div className={styles.settlementInfo}>
 												<span className={styles.settlementFrom}>
@@ -426,6 +520,11 @@ const Dashboard: React.FC = () => {
 											</div>
 										</div>
 									))}
+									{currentSettlements.length > 2 && (
+										<button className={styles.viewAllLink}>
+											View all ({currentSettlements.length})
+										</button>
+									)}
 								</div>
 							) : (
 								<div className={styles.emptyState}>
@@ -443,9 +542,63 @@ const Dashboard: React.FC = () => {
 					</Card>
 				</div>
 
+				{/* Participants */}
+				<div className={styles.participantsCard}>
+					<Card size="medium">
+						<CardHeader
+							title="Participants"
+							action={
+								<Button
+									size="small"
+									variant="ghost"
+									onClick={() => setIsAddParticipantOpen(true)}
+								>
+									+ Add
+								</Button>
+							}
+						/>
+						<CardContent>
+							<div className={styles.participantList}>
+								{participants.slice(0, 4).map((p, i) => (
+									<div key={i} className={styles.participantItem}>
+										<div className={styles.participantAvatar}>
+											{p.name.charAt(0).toUpperCase()}
+										</div>
+										<div className={styles.participantInfo}>
+											<span className={styles.participantName}>{p.name}</span>
+											{p.stellarAddress ? (
+												<span className={styles.participantAddress}>
+													{p.stellarAddress}
+												</span>
+											) : (
+												<button
+													className={styles.addWalletLink}
+													onClick={() => setIsAddParticipantOpen(true)}
+												>
+													Add wallet
+												</button>
+											)}
+										</div>
+										<span
+											className={`${styles.walletBadge} ${p.stellarAddress ? styles.walletLinked : styles.walletMissing}`}
+										>
+											{p.stellarAddress ? "Linked" : "Missing"}
+										</span>
+									</div>
+								))}
+								{participants.length > 4 && (
+									<button className={styles.viewAllLink}>
+										View all ({participants.length})
+									</button>
+								)}
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+
 				{/* Recent Expenses */}
 				<div className={styles.expenses}>
-					<Card size="large">
+					<Card size="medium">
 						<CardHeader
 							title="Recent Expenses"
 							action={
@@ -476,160 +629,6 @@ const Dashboard: React.FC = () => {
 										</div>
 										<span className={styles.expenseAmount}>
 											{expense.amount.toFixed(2)} XLM
-										</span>
-									</div>
-								))}
-							</div>
-						</CardContent>
-					</Card>
-				</div>
-
-				{/* Quick Actions */}
-				<div className={styles.actions}>
-					<Card size="medium">
-						<CardHeader title="Quick Actions" />
-						<CardContent>
-							<div className={styles.actionGrid}>
-								<button
-									className={styles.actionCard}
-									onClick={() => setIsCreateEventOpen(true)}
-								>
-									<div className={styles.actionIcon}>
-										<svg
-											width="22"
-											height="22"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										>
-											<rect x="3" y="4" width="18" height="18" rx="2" />
-											<line x1="16" y1="2" x2="16" y2="6" />
-											<line x1="8" y1="2" x2="8" y2="6" />
-											<line x1="3" y1="10" x2="21" y2="10" />
-											<line x1="12" y1="14" x2="12" y2="18" />
-											<line x1="10" y1="16" x2="14" y2="16" />
-										</svg>
-									</div>
-									<span className={styles.actionLabel}>Create Event</span>
-								</button>
-
-								<button
-									className={styles.actionCard}
-									onClick={() => setIsAddExpenseOpen(true)}
-								>
-									<div className={styles.actionIcon}>
-										<svg
-											width="22"
-											height="22"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										>
-											<line x1="12" y1="1" x2="12" y2="23" />
-											<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-										</svg>
-									</div>
-									<span className={styles.actionLabel}>Add Expense</span>
-								</button>
-
-								<button
-									className={styles.actionCard}
-									onClick={() => setIsUploadReceiptOpen(true)}
-								>
-									<div className={styles.actionIcon}>
-										<svg
-											width="22"
-											height="22"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										>
-											<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-											<polyline points="17 8 12 3 7 8" />
-											<line x1="12" y1="3" x2="12" y2="15" />
-										</svg>
-									</div>
-									<span className={styles.actionLabel}>Upload Receipt</span>
-								</button>
-
-								<button
-									className={styles.actionCard}
-									onClick={() => setIsAddParticipantOpen(true)}
-								>
-									<div className={styles.actionIcon}>
-										<svg
-											width="22"
-											height="22"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										>
-											<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-											<circle cx="12" cy="7" r="4" />
-											<line x1="19" y1="8" x2="19" y2="14" />
-											<line x1="22" y1="11" x2="16" y2="11" />
-										</svg>
-									</div>
-									<span className={styles.actionLabel}>Add Participant</span>
-								</button>
-							</div>
-						</CardContent>
-					</Card>
-				</div>
-
-				{/* Participants */}
-				<div className={styles.participantsCard}>
-					<Card size="medium">
-						<CardHeader
-							title="Participants"
-							action={
-								<Button
-									size="small"
-									variant="ghost"
-									onClick={() => setIsAddParticipantOpen(true)}
-								>
-									+ Add
-								</Button>
-							}
-						/>
-						<CardContent>
-							<div className={styles.participantList}>
-								{participants.slice(0, 5).map((p, i) => (
-									<div key={i} className={styles.participantItem}>
-										<div className={styles.participantAvatar}>
-											{p.name.charAt(0).toUpperCase()}
-										</div>
-										<div className={styles.participantInfo}>
-											<span className={styles.participantName}>{p.name}</span>
-											{p.stellarAddress ? (
-												<span className={styles.participantAddress}>
-													{p.stellarAddress}
-												</span>
-											) : (
-												<button
-													className={styles.addWalletLink}
-													onClick={() => setIsAddParticipantOpen(true)}
-												>
-													Add wallet
-												</button>
-											)}
-										</div>
-										<span
-											className={`${styles.walletBadge} ${p.stellarAddress ? styles.walletLinked : styles.walletMissing}`}
-										>
-											{p.stellarAddress ? "Linked" : "Missing"}
 										</span>
 									</div>
 								))}

@@ -8,7 +8,13 @@ import {
 	useTransition,
 } from "react"
 import storage from "../util/storage"
-import { wallet, fetchBalances, type MappedBalances } from "../util/wallet"
+import {
+	wallet,
+	fetchBalances,
+	type MappedBalances,
+	connectWallet,
+	disconnectWallet,
+} from "../util/wallet"
 
 const signTransaction = wallet.signTransaction.bind(wallet)
 
@@ -155,6 +161,8 @@ export interface WalletContextType {
 	signTransaction: typeof wallet.signTransaction
 	updateBalances: () => Promise<void>
 	walletWarnings: WalletWarnings
+	connect: () => Promise<void>
+	disconnect: () => Promise<void>
 }
 
 const POLL_INTERVAL = 1000
@@ -171,6 +179,8 @@ export const WalletContext = // @ts-ignore
 			noGetNetworkSupport: false,
 			messages: [],
 		},
+		connect: async () => {},
+		disconnect: async () => {},
 	})
 
 export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
@@ -354,6 +364,15 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
 	// Get wallet warnings based on current wallet
 	const walletWarnings = useMemo(() => getWalletWarnings(walletId), [walletId])
 
+	const connect = useCallback(async () => {
+		await connectWallet()
+	}, [])
+
+	const disconnect = useCallback(async () => {
+		await disconnectWallet()
+		nullify()
+	}, [])
+
 	const contextValue = useMemo(
 		() => ({
 			address,
@@ -364,6 +383,8 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
 			isPending,
 			signTransaction,
 			walletWarnings,
+			connect,
+			disconnect,
 		}),
 		[
 			address,
@@ -373,6 +394,8 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
 			updateBalances,
 			isPending,
 			walletWarnings,
+			connect,
+			disconnect,
 		],
 	)
 

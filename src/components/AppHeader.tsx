@@ -11,7 +11,15 @@ const AppHeader: React.FC = () => {
 		<header className={styles.header}>
 			<div className={styles.container}>
 				<NavLink to="/" className={styles.logo}>
-					<span className={styles.logoText}>FiftyPay</span>
+					<img
+						src="/logo.png"
+						alt="FiftyPay Logo"
+						className={styles.logoImage}
+					/>
+					<span className={styles.logoText}>
+						<span className={styles.logoLight}>fifty</span>
+						<span className={styles.logoBold}>pay</span>
+					</span>
 				</NavLink>
 
 				<nav className={styles.nav}>

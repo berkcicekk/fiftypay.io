@@ -25,27 +25,22 @@
 }
 
 .settlements {
-	grid-column: span 7;
+	grid-column: span 4;
+	grid-row: span 3;
+}
+
+.participantsCard {
+	grid-column: span 4;
 	grid-row: span 3;
 }
 
 .expenses {
-	grid-column: span 5;
+	grid-column: span 4;
 	grid-row: span 3;
 }
 
-.actions {
-	grid-column: span 7;
-	grid-row: span 2;
-}
-
-.participantsCard {
-	grid-column: span 5;
-	grid-row: span 2;
-}
-
 .receipts {
-	grid-column: span 5;
+	grid-column: span 12;
 	grid-row: span 2;
 }
 
@@ -82,7 +77,7 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	padding: 24px 0;
+	padding: 24px 0 16px 0;
 	text-align: center;
 }
 
@@ -103,23 +98,82 @@
 .balanceNote {
 	font-size: 0.875rem;
 	opacity: 0.7;
+	margin-bottom: 20px;
+}
+
+/* Mini Quick Actions */
+.miniActions {
+	display: flex;
+	gap: 8px;
+	padding-top: 16px;
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+.miniActionBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 10px 14px;
+	background: rgba(255, 255, 255, 0.95);
+	border: 2px solid transparent;
+	border-radius: 10px;
+	background-image:
+		linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)),
+		linear-gradient(135deg, #9333ea, #c084fc, #e879f9);
+	background-origin: border-box;
+	background-clip: padding-box, border-box;
+	color: #1a1a22;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-family: "Inter", sans-serif;
+	flex: 1;
+	min-width: 140px;
+	max-width: 160px;
+}
+
+.miniActionBtn svg {
+	flex-shrink: 0;
+	stroke: #9333ea;
+	stroke-width: 2.5;
+}
+
+.miniActionBtn:hover {
+	background-image:
+		linear-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 1)),
+		linear-gradient(135deg, #9333ea, #c084fc, #e879f9);
+	color: #9333ea;
+	box-shadow: 0 4px 16px rgba(147, 51, 234, 0.3);
+	transform: translateY(-2px);
+}
+
+.miniActionBtn:hover svg {
+	stroke: #9333ea;
+}
+
+.miniActionBtn:active {
+	transform: translateY(0) scale(0.98);
 }
 
 /* Settlement List */
 .settlementList {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 10px;
 }
 
 .settlementItem {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 16px;
+	padding: 12px;
 	background: var(--bg-secondary);
 	border: 1px solid var(--border-color);
-	border-radius: 12px;
+	border-radius: 10px;
 	transition: all 0.2s ease;
 }
 
@@ -131,8 +185,9 @@
 .settlementInfo {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 10px;
 	flex: 1;
+	font-size: 0.875rem;
 }
 
 .settlementFrom,
@@ -143,39 +198,48 @@
 
 .settlementArrow {
 	color: var(--text-muted);
-	font-size: 1.25rem;
+	font-size: 1rem;
 }
 
 .settlementAction {
 	display: flex;
 	align-items: center;
-	gap: 16px;
+	gap: 12px;
 }
 
 .settlementAmount {
-	font-size: 1.125rem;
+	font-size: 1rem;
 	font-weight: 700;
-	color: var(--accent-primary);
-	min-width: 100px;
-	text-align: right;
+	color: var(--text-primary);
+	padding: 4px 10px;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 214, 10, 0.15),
+		rgba(255, 234, 0, 0.1)
+	);
+	border: 1px solid rgba(255, 214, 10, 0.3);
+	border-radius: 8px;
+	min-width: 90px;
+	text-align: center;
 }
 
 /* Expense List */
 .expenseList {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 10px;
 }
 
 .expenseItem {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 16px;
+	padding: 12px;
 	background: var(--bg-secondary);
 	border: 1px solid var(--border-color);
-	border-radius: 12px;
+	border-radius: 10px;
 	transition: all 0.2s ease;
+	cursor: pointer;
 }
 
 .expenseItem:hover {
@@ -192,137 +256,44 @@
 .expenseDescription {
 	font-weight: 600;
 	color: var(--text-primary);
+	font-size: 0.875rem;
 }
 
 .expenseMeta {
-	font-size: 0.875rem;
+	font-size: 0.75rem;
 	color: var(--text-secondary);
 }
 
 .expenseAmount {
-	font-size: 1.125rem;
+	font-size: 1rem;
 	font-weight: 700;
 	color: var(--text-primary);
 }
 
-/* Quick Actions */
-.actionGrid {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: 12px;
-}
-
-.actionCard {
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 12px;
-	padding: 24px 16px;
-	background: linear-gradient(
-		135deg,
-		var(--bg-secondary) 0%,
-		var(--bg-card) 100%
-	);
-	border: 1px solid var(--border-color);
-	border-radius: 16px;
-	cursor: pointer;
-	transition: all 0.3s ease;
-	overflow: hidden;
-	aspect-ratio: 1;
-}
-
-.actionCard::before {
-	content: "";
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: linear-gradient(
-		135deg,
-		var(--accent-primary) 0%,
-		var(--accent-secondary) 100%
-	);
-	opacity: 0;
-	transition: opacity 0.3s ease;
-	z-index: 0;
-}
-
-.actionCard:hover::before {
-	opacity: 0.1;
-}
-
-.actionCard:hover {
-	border-color: var(--accent-primary);
-	transform: translateY(-4px);
-	box-shadow: 0 8px 24px var(--accent-glow-soft);
-}
-
-.actionCard:active {
-	transform: translateY(-2px);
-}
-
-.actionIcon {
-	position: relative;
-	z-index: 1;
-	font-size: 2rem;
-	width: 56px;
-	height: 56px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: var(--bg-primary);
-	border-radius: 12px;
-	border: 1px solid var(--border-color);
-	transition: all 0.3s ease;
-}
-
-.actionCard:hover .actionIcon {
-	background: linear-gradient(
-		135deg,
-		var(--accent-primary) 0%,
-		var(--accent-secondary) 100%
-	);
-	border-color: transparent;
-	box-shadow: 0 4px 16px var(--accent-glow-medium);
-	transform: scale(1.1);
-}
-
-.actionLabel {
-	position: relative;
-	z-index: 1;
-	font-size: 0.875rem;
-	font-weight: 600;
-	color: var(--text-primary);
-	text-align: center;
-	transition: color 0.3s ease;
-}
-
-.actionCard:hover .actionLabel {
-	color: var(--accent-primary);
-}
-
-/* Payment Tabs */
-.paymentTabs {
+/* Settlement Buttons */
+.settlementButtons {
 	display: flex;
 	gap: 8px;
-	margin-bottom: 20px;
+	align-items: center;
+}
+.paymentTabs {
+	display: flex;
+	gap: 6px;
+	margin-bottom: 16px;
 	background: var(--bg-secondary);
 	padding: 4px;
-	border-radius: 12px;
+	border-radius: 10px;
 }
 
 .paymentTab {
 	flex: 1;
-	padding: 10px 16px;
+	padding: 8px 12px;
 	background: transparent;
 	border: none;
 	color: var(--text-secondary);
-	font-size: 0.875rem;
+	font-size: 0.8125rem;
 	font-weight: 600;
-	border-radius: 10px;
+	border-radius: 8px;
 	cursor: pointer;
 	transition: all 0.2s ease;
 	font-family: "Inter", sans-serif;
@@ -333,8 +304,13 @@
 }
 
 .paymentTab.activeTab {
-	background: var(--accent-primary);
+	background: linear-gradient(
+		135deg,
+		var(--accent-primary),
+		var(--accent-secondary)
+	);
 	color: var(--text-dark);
+	box-shadow: 0 2px 8px rgba(255, 214, 10, 0.25);
 }
 
 .statusBadge {
@@ -347,21 +323,43 @@
 	color: var(--accent-primary);
 }
 
+/* View All Link */
+.viewAllLink {
+	width: 100%;
+	padding: 10px;
+	background: transparent;
+	border: 1px solid var(--border-color);
+	border-radius: 8px;
+	color: var(--text-secondary);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-family: "Inter", sans-serif;
+	margin-top: 8px;
+}
+
+.viewAllLink:hover {
+	border-color: var(--accent-primary);
+	color: var(--accent-primary);
+	background: rgba(255, 214, 10, 0.05);
+}
+
 /* Receipts */
 .receiptList {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 10px;
 }
 
 .receiptItem {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 12px;
+	padding: 10px;
 	background: var(--bg-secondary);
 	border: 1px solid var(--border-color);
-	border-radius: 12px;
+	border-radius: 10px;
 	transition: all 0.2s ease;
 }
 
@@ -378,7 +376,7 @@
 }
 
 .receiptName {
-	font-size: 0.875rem;
+	font-size: 0.8125rem;
 	font-weight: 600;
 	color: var(--text-primary);
 	overflow: hidden;
@@ -387,7 +385,7 @@
 }
 
 .receiptDate {
-	font-size: 0.75rem;
+	font-size: 0.6875rem;
 	color: var(--text-secondary);
 }
 
@@ -470,11 +468,11 @@
 .participantItem {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	padding: 10px 12px;
+	gap: 10px;
+	padding: 10px;
 	background: var(--bg-secondary);
 	border: 1px solid var(--border-color);
-	border-radius: 12px;
+	border-radius: 10px;
 	transition: border-color 0.2s ease;
 }
 
@@ -483,8 +481,8 @@
 }
 
 .participantAvatar {
-	width: 36px;
-	height: 36px;
+	width: 32px;
+	height: 32px;
 	border-radius: 50%;
 	background: linear-gradient(
 		135deg,
@@ -492,7 +490,7 @@
 		var(--accent-secondary)
 	);
 	color: var(--text-dark);
-	font-size: 0.875rem;
+	font-size: 0.8125rem;
 	font-weight: 700;
 	display: flex;
 	align-items: center;
@@ -509,13 +507,13 @@
 }
 
 .participantName {
-	font-size: 0.9375rem;
+	font-size: 0.875rem;
 	font-weight: 600;
 	color: var(--text-primary);
 }
 
 .participantAddress {
-	font-size: 0.75rem;
+	font-size: 0.6875rem;
 	color: var(--text-secondary);
 	font-family: "Inconsolata", monospace;
 }
@@ -524,7 +522,7 @@
 	background: none;
 	border: none;
 	padding: 0;
-	font-size: 0.75rem;
+	font-size: 0.6875rem;
 	color: var(--accent-primary);
 	cursor: pointer;
 	font-family: "Inter", sans-serif;
@@ -536,7 +534,7 @@
 }
 
 .walletBadge {
-	font-size: 0.6875rem;
+	font-size: 0.625rem;
 	font-weight: 700;
 	padding: 3px 8px;
 	border-radius: 6px;
@@ -552,9 +550,13 @@
 }
 
 .walletMissing {
-	background: rgba(239, 68, 68, 0.1);
-	color: var(--color-negative);
-	border: 1px solid rgba(239, 68, 68, 0.2);
+	background: linear-gradient(
+		135deg,
+		rgba(255, 214, 10, 0.15),
+		rgba(255, 234, 0, 0.1)
+	);
+	color: var(--accent-primary);
+	border: 1px solid rgba(255, 214, 10, 0.3);
 }
 
 /* Receipt Header Actions */
@@ -564,21 +566,16 @@
 	align-items: center;
 }
 
-/* Expense item clickable */
-.expenseItem {
-	cursor: pointer;
-}
-
 /* Empty State */
 .emptyState {
 	text-align: center;
-	padding: 32px 16px;
+	padding: 24px 16px;
 	color: var(--text-secondary);
 }
 
 .emptyState p {
-	margin: 0;
-	font-size: 0.875rem;
+	margin: 0 0 12px 0;
+	font-size: 0.8125rem;
 }
 
 /* Responsive Design */
@@ -597,19 +594,15 @@
 	}
 
 	.settlements {
-		grid-column: span 8;
-	}
-
-	.expenses {
-		grid-column: span 8;
-	}
-
-	.actions {
 		grid-column: span 4;
 	}
 
 	.participantsCard {
 		grid-column: span 4;
+	}
+
+	.expenses {
+		grid-column: span 8;
 	}
 
 	.receipts {
@@ -631,7 +624,6 @@
 	.netBalance,
 	.settlements,
 	.expenses,
-	.actions,
 	.participantsCard,
 	.receipts {
 		grid-column: span 1;
@@ -646,10 +638,20 @@
 		font-size: 2.5rem;
 	}
 
+	.miniActions {
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.miniActionBtn {
+		width: 100%;
+		justify-content: center;
+	}
+
 	.settlementItem {
 		flex-direction: column;
 		align-items: flex-start;
-		gap: 12px;
+		gap: 10px;
 	}
 
 	.settlementAction {
@@ -657,7 +659,9 @@
 		justify-content: space-between;
 	}
 
-	.actionGrid {
-		grid-template-columns: repeat(2, 1fr);
+	.settlementButtons {
+		flex-direction: column;
+		width: 100%;
+		gap: 6px;
 	}
 }

@@ -26,9 +26,15 @@
 	gap: 12px;
 }
 
+.logoImage {
+	height: 40px;
+	width: auto;
+	object-fit: contain;
+}
+
 .logoText {
 	font-size: 1.5rem;
-	font-weight: 800;
+	font-family: "Montserrat", sans-serif;
 	background: linear-gradient(
 		135deg,
 		var(--accent-primary) 0%,
@@ -38,6 +44,18 @@
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
 	letter-spacing: -0.02em;
+	display: flex;
+	align-items: baseline;
+}
+
+.logoLight {
+	font-weight: 300;
+	text-transform: lowercase;
+}
+
+.logoBold {
+	font-weight: 800;
+	text-transform: lowercase;
 }
 
 .nav {
@@ -136,6 +154,10 @@
 	.container {
 		padding: 0 16px;
 		height: 64px;
+	}
+
+	.logoImage {
+		height: 32px;
 	}
 
 	.logoText {
