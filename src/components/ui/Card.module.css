@@ -1,0 +1,82 @@
+.card {
+	background: var(--bg-card);
+	border: 1px solid var(--border-color);
+	border-radius: 20px;
+	padding: 20px;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card.default:hover {
+	border-color: var(--border-light);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card.highlight {
+	background: linear-gradient(
+		135deg,
+		var(--bg-card) 0%,
+		rgba(255, 214, 10, 0.05) 100%
+	);
+	border-color: var(--border-accent);
+}
+
+.card.accent {
+	background: linear-gradient(
+		135deg,
+		var(--accent-primary) 0%,
+		var(--accent-secondary) 100%
+	);
+	border: none;
+	box-shadow: 0 8px 32px var(--accent-glow-medium);
+	color: var(--text-dark);
+}
+
+.card.small {
+	padding: 16px;
+}
+
+.card.large {
+	padding: 24px;
+}
+
+.header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 16px;
+}
+
+.headerText {
+	flex: 1;
+}
+
+.title {
+	font-size: 1.125rem;
+	font-weight: 600;
+	margin: 0 0 4px 0;
+	color: inherit;
+}
+
+.card.accent .title {
+	color: var(--text-dark);
+}
+
+.subtitle {
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+	margin: 0;
+}
+
+.card.accent .subtitle {
+	color: rgba(11, 11, 15, 0.7);
+}
+
+.headerAction {
+	flex-shrink: 0;
+	margin-left: 16px;
+}
+
+.content {
+	color: inherit;
+}
