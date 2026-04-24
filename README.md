@@ -70,6 +70,9 @@ network:
 
 ### 1. Guess The Number Contract
 
+<img width="1216" height="128" alt="image" src="https://github.com/user-attachments/assets/470829a4-2698-41b5-9a6c-c0ff027023af" />
+<img width="853" height="199" alt="image" src="https://github.com/user-attachments/assets/037bf76d-eab3-4abe-a6f0-62203e73c52c" />
+
 - **Contract ID:** `CDWGFOPHIJWUGESW7INHRY5XZ5634JW2EDP3NJX2BD7UXSM7XNJJLHOJ`
 - **Description:** A simple game contract for guessing numbers
 - **Admin:** `GDIPTOFTCOTLHOPWLTSHHKU5MAFPX5NXP4W77ROBOXYBQ2HFLNUJYJA7`
