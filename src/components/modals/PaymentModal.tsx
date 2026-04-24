@@ -1,4 +1,7 @@
+import * as StellarSdk from "@stellar/stellar-sdk"
 import React, { useState } from "react"
+import { horizonUrl, networkPassphrase } from "../../contracts/util"
+import { useWallet } from "../../hooks/useWallet"
 import { Button } from "../ui/Button"
 import styles from "./Modal.module.css"
 
@@ -21,19 +24,61 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 	amount,
 	toAddress,
 }) => {
+	const { address, signTransaction } = useWallet()
 	const [isProcessing, setIsProcessing] = useState(false)
-	const [step, setStep] = useState<"confirm" | "processing" | "success">(
-		"confirm",
-	)
+	const [step, setStep] = useState<
+		"confirm" | "processing" | "success" | "error"
+	>("confirm")
+	const [errorMessage, setErrorMessage] = useState<string>("")
 
 	if (!isOpen) return null
 
 	const handlePay = async () => {
+		if (!address || !toAddress) {
+			setErrorMessage("Wallet address or recipient address is missing")
+			setStep("error")
+			return
+		}
+
 		setIsProcessing(true)
 		setStep("processing")
 
 		try {
-			await new Promise((resolve) => setTimeout(resolve, 2000))
+			// Create Horizon server instance
+			const server = new StellarSdk.Horizon.Server(horizonUrl)
+
+			// Load source account
+			const sourceAccount = await server.loadAccount(address)
+
+			// Build transaction
+			const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
+				fee: StellarSdk.BASE_FEE,
+				networkPassphrase: networkPassphrase,
+			})
+				.addOperation(
+					StellarSdk.Operation.payment({
+						destination: toAddress,
+						asset: StellarSdk.Asset.native(),
+						amount: amount.toString(),
+					}),
+				)
+				.setTimeout(180)
+				.build()
+
+			// Sign transaction with wallet
+			const signedXdr = await signTransaction(transaction.toXDR(), {
+				networkPassphrase: networkPassphrase,
+				address: address,
+			})
+
+			// Submit transaction
+			const signedTransaction = StellarSdk.TransactionBuilder.fromXDR(
+				signedXdr,
+				networkPassphrase,
+			)
+			const result = await server.submitTransaction(signedTransaction)
+
+			console.log("Payment successful:", result)
 			setStep("success")
 
 			setTimeout(() => {
@@ -41,7 +86,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 				handleClose()
 			}, 1500)
 		} catch (err) {
-			setStep("confirm")
+			console.error("Payment error:", err)
+			setErrorMessage(
+				err instanceof Error
+					? err.message
+					: "Payment failed. Please try again.",
+			)
+			setStep("error")
 			setIsProcessing(false)
 		}
 	}
@@ -49,8 +100,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 	const handleClose = () => {
 		if (!isProcessing) {
 			setStep("confirm")
+			setErrorMessage("")
 			onClose()
 		}
+	}
+
+	const handleRetry = () => {
+		setStep("confirm")
+		setErrorMessage("")
+		setIsProcessing(false)
 	}
 
 	return (
@@ -104,6 +162,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 						<div className={styles.processingState}>
 							<div className={styles.spinner}></div>
 							<p>Processing payment...</p>
+							<p className={styles.processingNote}>
+								Please confirm the transaction in your wallet
+							</p>
 						</div>
 					)}
 
@@ -111,6 +172,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 						<div className={styles.successState}>
 							<div className={styles.successIcon}>✓</div>
 							<p>Payment successful</p>
+						</div>
+					)}
+
+					{step === "error" && (
+						<div className={styles.errorState}>
+							<div className={styles.errorIcon}>✕</div>
+							<p>Payment failed</p>
+							<p className={styles.errorMessage}>{errorMessage}</p>
 						</div>
 					)}
 				</div>
@@ -132,6 +201,17 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 							disabled={isProcessing}
 						>
 							Confirm Payment
+						</Button>
+					</div>
+				)}
+
+				{step === "error" && (
+					<div className={styles.footer}>
+						<Button type="button" variant="secondary" onClick={handleClose}>
+							Close
+						</Button>
+						<Button type="button" variant="primary" onClick={handleRetry}>
+							Try Again
 						</Button>
 					</div>
 				)}
