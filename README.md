@@ -1,6 +1,7 @@
 # FiftyPay
 
-<img width="3838" height="2048" alt="image" src="https://github.com/user-attachments/assets/e8de5537-0c71-4c38-82e2-fa3f768f4192" />
+<img width="3734" height="1923" alt="Ekran görüntüsü 2026-04-17 212141" src="https://github.com/user-attachments/assets/38f58789-c04b-479d-8a39-47af5724b79b" />
+
 
 **Split the bill. Settle instantly on Stellar.**
 
